@@ -20,7 +20,8 @@ namespace Backend.Controller
         #region Vars
         private IWebHostEnvironment _env;
         public OSSController(IWebHostEnvironment env) { _env = env; }
-        public string ClientId { get { return OAuthController.GetAppSetting("FORGE_CLIENT_ID").ToLower(); } }
+        //public string ClientId { get { return OAuthController.GetAppSetting("FORGE_CLIENT_ID").ToLower(); } }
+        private Model.Credentials objCredentials { get; set; }
         string sRegion = "US";
         int iBucketNumber = 100;
         string sModelDatatype = @"application/octet-stream";
@@ -37,23 +38,28 @@ namespace Backend.Controller
         {
             IList<Model.TreeNode> nodes = new List<Model.TreeNode>();
             dynamic oauth = await OAuthController.GetInternalAsync();
+            //objCredentials = await Model.Credentials.FromSessionAsync(base.Request.Cookies, Response.Cookies);
+            //if (objCredentials == null) { return null; }
+            //string oauth = objCredentials.TokenInternal;
 
             if (id == "#") // root
             {
                 // in this case, let's return all buckets
                 BucketsApi appBckets = new BucketsApi();
                 appBckets.Configuration.AccessToken = oauth.access_token;
-
+                // 3LO
+                //appBckets.Configuration.AccessToken = oauth;
+                string stStartAt = "0";
                 // to simplify, let's return only the first 100 buckets
-                dynamic buckets = await appBckets.GetBucketsAsync(sRegion, iBucketNumber);
+                dynamic buckets = await appBckets.GetBucketsAsync(sRegion, iBucketNumber, stStartAt);
                 foreach (KeyValuePair<string, dynamic> bucket in new DynamicDictionaryItems(buckets.items))
-                    nodes.Add(new Model.TreeNode(bucket.Value.bucketKey, bucket.Value.bucketKey.Replace(ClientId + "-", string.Empty), "bucket", true));
+                    nodes.Add(new Model.TreeNode(bucket.Value.bucketKey, bucket.Value.bucketKey.Replace(objCredentials.ClientId + "-", string.Empty), "bucket", true));
             }
             else
             {
                 // as we have the id (bucketKey), let's return all 
                 ObjectsApi objects = new ObjectsApi();
-                objects.Configuration.AccessToken = oauth.access_token;
+                objects.Configuration.AccessToken = oauth;
 
                 var objectsList = objects.GetObjects(id);
                 foreach (KeyValuePair<string, dynamic> objInfo in new DynamicDictionaryItems(objectsList.items))
@@ -73,9 +79,11 @@ namespace Backend.Controller
         public async Task<dynamic> CreateBucket([FromBody]Model.Bucket bucket)
         {
             BucketsApi buckets = new BucketsApi();
-            dynamic token = await OAuthController.GetInternalAsync();
-            buckets.Configuration.AccessToken = token.access_token;
-            PostBucketsPayload bucketPayload = new PostBucketsPayload(string.Format("{0}-{1}", ClientId, bucket.bucketKey.ToLower()), null,
+            //dynamic token = await OAuthController.GetInternalAsync();
+            //buckets.Configuration.AccessToken = token.access_token;
+            buckets.Configuration.AccessToken = objCredentials.TokenInternal;
+
+            PostBucketsPayload bucketPayload = new PostBucketsPayload(string.Format("{0}-{1}", objCredentials.ClientId, bucket.bucketKey.ToLower()), null,
               PostBucketsPayload.PolicyKeyEnum.Transient);
             return await buckets.CreateBucketAsync(bucketPayload, sRegion);
         }
@@ -92,11 +100,11 @@ namespace Backend.Controller
             var fileSavePath = Path.Combine(_env.ContentRootPath, input.fileToUpload.FileName);
             using (var stream = new FileStream(fileSavePath, FileMode.Create))
                 await input.fileToUpload.CopyToAsync(stream);
-
-            // get the bucket...
-            dynamic oauth = await OAuthController.GetInternalAsync();
             ObjectsApi objects = new ObjectsApi();
-            objects.Configuration.AccessToken = oauth.access_token;
+            // get the bucket...
+            //dynamic oauth = await OAuthController.GetInternalAsync();
+            //objects.Configuration.AccessToken = oauth.access_token;
+            objects.Configuration.AccessToken = objCredentials.TokenInternal;
 
             // upload the file/object, which will create a new object
             dynamic uploadedObj;
