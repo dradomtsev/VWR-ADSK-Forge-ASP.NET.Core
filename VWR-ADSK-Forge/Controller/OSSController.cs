@@ -38,9 +38,10 @@ namespace Backend.Controller
         {
             IList<Model.TreeNode> nodes = new List<Model.TreeNode>();
             dynamic oauth = await OAuthController.GetInternalAsync();
-            //objCredentials = await Model.Credentials.FromSessionAsync(base.Request.Cookies, Response.Cookies);
-            //if (objCredentials == null) { return null; }
+            // 3LO
             //string oauth = objCredentials.TokenInternal;
+            objCredentials = await Model.Credentials.FromSessionAsync(base.Request.Cookies, Response.Cookies);
+            if (objCredentials == null) { return null; }
 
             if (id == "#") // root
             {
@@ -49,9 +50,8 @@ namespace Backend.Controller
                 appBckets.Configuration.AccessToken = oauth.access_token;
                 // 3LO
                 //appBckets.Configuration.AccessToken = oauth;
-                string stStartAt = "0";
                 // to simplify, let's return only the first 100 buckets
-                dynamic buckets = await appBckets.GetBucketsAsync(sRegion, iBucketNumber, stStartAt);
+                dynamic buckets = await appBckets.GetBucketsAsync(sRegion, iBucketNumber);
                 foreach (KeyValuePair<string, dynamic> bucket in new DynamicDictionaryItems(buckets.items))
                     nodes.Add(new Model.TreeNode(bucket.Value.bucketKey, bucket.Value.bucketKey.Replace(objCredentials.ClientId + "-", string.Empty), "bucket", true));
             }
@@ -59,7 +59,9 @@ namespace Backend.Controller
             {
                 // as we have the id (bucketKey), let's return all 
                 ObjectsApi objects = new ObjectsApi();
-                objects.Configuration.AccessToken = oauth;
+                objects.Configuration.AccessToken = oauth.access_token;
+                // 3LO
+                //objects.Configuration.AccessToken = oauth;
 
                 var objectsList = objects.GetObjects(id);
                 foreach (KeyValuePair<string, dynamic> objInfo in new DynamicDictionaryItems(objectsList.items))
