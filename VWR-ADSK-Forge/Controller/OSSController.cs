@@ -32,8 +32,8 @@ namespace Backend.Controller
         /// <summary>
         /// Return list of buckets (id=#) or list of objects (id=bucketKey)
         /// </summary>
-
-        [HttpGet("/api/forge/oss/buckets")]
+        [HttpGet]
+        [Route("/api/forge/oss/buckets")]
         public async Task<IList<Model.TreeNode>> GetOSSAsync(string id)
         {
             IList<Model.TreeNode> nodes = new List<Model.TreeNode>();
