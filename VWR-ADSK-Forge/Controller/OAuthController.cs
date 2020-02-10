@@ -11,7 +11,14 @@ namespace Backend.Controller
 {
     public class OAuthController : ControllerBase
     {
+        #region Vars
         private static dynamic InternalToken { get; set; }
+        //Token for frontend usage
+        private static dynamic PublicToken { get; set; }
+        #endregion
+
+        #region Methods
+
         [HttpGet]
         [Route("/api/forge/oauth/token")]
         public async Task<AccessToken> GetPublicTokenAsync()
@@ -97,6 +104,21 @@ namespace Backend.Controller
         }
 
         /// <summary>
+        /// Get access token with public (viewables:read) scope
+        /// </summary>
+        [HttpGet]
+        [Route("/api/forge/oauth/token2LO")]
+        public async Task<dynamic> GetPublicAsync()
+        {
+            if (PublicToken == null || PublicToken.ExpiresAt < DateTime.UtcNow)
+            {
+                PublicToken = await Get2LeggedTokenAsync(new Scope[] { Scope.ViewablesRead });
+                PublicToken.ExpiresAt = DateTime.UtcNow.AddSeconds(PublicToken.expires_in);
+            }
+            return PublicToken;
+        }
+
+        /// <summary>
         /// Get the access token from Autodesk
         /// </summary>
         private static async Task<dynamic> Get2LeggedTokenAsync(Scope[] scopes)
@@ -111,4 +133,5 @@ namespace Backend.Controller
             return bearer;
         }
     }
+    #endregion
 }
