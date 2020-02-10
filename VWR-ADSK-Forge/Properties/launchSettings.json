@@ -8,15 +8,15 @@
     }
   },
   "profiles": {
-    "IIS Express": {
+    "IIS Express Dev": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "launchUrl": "http://localhost:3000",
       "environmentVariables": {
         "FORGE_CALLBACK_URL": "http://localhost:3000/api/forge/callback/oauth",
-        "FORGE_CLIENT_SECRET": "vSfYV2zVIjwjSOMq",
+        "FORGE_CLIENT_SECRET": "rgVmXFX4HTE2wJrc",
         "ASPNETCORE_URLS": "http://localhost:3000",
-        "FORGE_CLIENT_ID": "Kxq9v1r53vNXaAHE3VbMTQmartFzWPPP",
+        "FORGE_CLIENT_ID": "KlHUIWc8vz39PH2mzInuzlu6c0NK7pNp",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
@@ -37,6 +37,18 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "publishAllPorts": true
+    },
+    "IIS Express Prod": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:3000",
+      "environmentVariables": {
+        "FORGE_CALLBACK_URL": "https://vwr-adsk-forge-aspnetcore.herokuapp.com/api/forge/callback/oauth",
+        "FORGE_CLIENT_SECRET": "vSfYV2zVIjwjSOMq",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "FORGE_CLIENT_ID": "Kxq9v1r53vNXaAHE3VbMTQmartFzWPPP",
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
     }
   }
 }

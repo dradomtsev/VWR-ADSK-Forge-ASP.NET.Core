@@ -38,13 +38,24 @@
                 <div class="panel panel-default fill">
                     <div class="panel-heading" data-toggle="tooltip">
                         Buckets &amp; Objects
+                        <span id="userInfo"></span>
                         <span id="refreshBuckets" class="glyphicon glyphicon-refresh" style="cursor: pointer"></span>
+                        <span id="signOut" class="glyphicon glyphicon-log-out" style="margin-top:5px;cursor: pointer; float: right; display: none" title="Sign out"> </span>
                         <button class="btn btn-xs btn-info" style="float: right" id="showFormCreateBucket" data-toggle="modal" data-target="#createBucketModal">
                             <span class="glyphicon glyphicon-folder-close"></span> New bucket
                         </button>
                     </div>
                     <div id="appBuckets">
-                        tree here
+                        <div style="padding-top: 100px; text-align: center;">
+                            <button class="btn btn-lg btn-default" id="autodeskSigninButton">
+                                <img src="https://github.com/Autodesk-Forge/learn.forge.viewhubmodels/raw/master/img/autodesk_text.png"
+                                     height="20"> Sign in
+                            </button>
+                            <br />
+                            <br />
+                            <br /> You may also need to provision your<br /> BIM 360 Docs account for this app.<br />
+                            <a href="https://forge.autodesk.com/blog/bim-360-docs-provisioning-forge-apps">Learn more</a>.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,3 +91,4 @@
     </div>
 </body>
 </html>
+<iframe id="hiddenFrame" style="visibility: hidden; display:none" />

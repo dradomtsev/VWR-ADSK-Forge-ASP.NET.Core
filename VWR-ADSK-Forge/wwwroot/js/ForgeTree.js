@@ -1,42 +1,81 @@
 $(document).ready(function () {
-    prepareAppBucketTree();
-    $('#refreshBuckets').click(function () {
-        $('#appBuckets').jstree(true).refresh();
-    });
+    // first, check if current visitor is signed in
+    jQuery.ajax({
+        url: '/api/forge/oauth/token',
+        success: function (res) {
+            // yes, it is signed in...
+            $('#signOut').show();
+            $('#refreshBuckets').show();
 
-    $('#createNewBucket').click(function () {
-        createNewBucket();
-    });
-
-    $('#createBucketModal').on('shown.bs.modal', function () {
-        $("#newBucketKey").focus();
-    })
-
-    $('#hiddenUploadField').change(function () {
-        var node = $('#appBuckets').jstree(true).get_selected(true)[0];
-        var _this = this;
-        if (_this.files.length == 0) return;
-        var file = _this.files[0];
-        switch (node.type) {
-            case 'bucket':
-                var formData = new FormData();
-                formData.append('fileToUpload', file);
-                formData.append('bucketKey', node.id);
-
-                $.ajax({
-                    url: '/api/forge/oss/objects',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    type: 'POST',
-                    success: function (data) {
-                        $('#appBuckets').jstree(true).refresh_node(node);
-                        _this.value = '';
-                    }
+            // prepare sign out
+            $('#signOut').click(function () {
+                $('#hiddenFrame').on('load', function (event) {
+                    location.href = '/api/forge/oauth/signout';
                 });
-                break;
+                $('#hiddenFrame').attr('src', 'https://accounts.autodesk.com/Authentication/LogOut');
+                // learn more about this signout iframe at
+                // https://forge.autodesk.com/blog/log-out-forge
+            })
+
+            // and refresh button
+            $('#refreshBuckets').click(function () {
+                $('#appBuckets').jstree(true).refresh();
+            });
+
+            // finally:
+            //prepareUserHubsTree();
+            //showUser();
+            prepareAppBucketTree();
+            $('#refreshBuckets').click(function () {
+                $('#appBuckets').jstree(true).refresh();
+            });
+
+            $('#createNewBucket').click(function () {
+                createNewBucket();
+            });
+
+            $('#createBucketModal').on('shown.bs.modal', function () {
+                $("#newBucketKey").focus();
+            })
+
+            $('#hiddenUploadField').change(function () {
+                var node = $('#appBuckets').jstree(true).get_selected(true)[0];
+                var _this = this;
+                if (_this.files.length == 0) return;
+                var file = _this.files[0];
+                switch (node.type) {
+                    case 'bucket':
+                        var formData = new FormData();
+                        formData.append('fileToUpload', file);
+                        formData.append('bucketKey', node.id);
+
+                        $.ajax({
+                            url: '/api/forge/oss/objects',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            type: 'POST',
+                            success: function (data) {
+                                $('#appBuckets').jstree(true).refresh_node(node);
+                                _this.value = '';
+                            }
+                        });
+                        break;
+                }
+            });
         }
     });
+
+    $('#autodeskSigninButton').click(function () {
+        jQuery.ajax({
+            url: '/api/forge/oauth/url',
+            success: function (url) {
+                location.href = url;
+            }
+        });
+    })
+
+   
 });
 
 function createNewBucket() {
@@ -92,25 +131,30 @@ function prepareAppBucketTree() {
         if (data != null && data.node != null && data.node.type == 'object') {
             $("#forgeViewer").empty();
             var urn = data.node.id;
-            getForgeToken(function (access_token) {
-                jQuery.ajax({
-                    url: 'https://developer.api.autodesk.com/modelderivative/v2/designdata/' + urn + '/manifest',
-                    headers: { 'Authorization': 'Bearer ' + access_token },
-                    success: function (res) {
-                        if (res.status === 'success') launchViewer(urn);
-                        else $("#forgeViewer").html('The translation job still running: ' + res.progress + '. Please try again in a moment.');
-                    },
-                    error: function (err) {
-                        var msgButton = 'This file is not translated yet! ' +
-                            '<button class="btn btn-xs btn-info" onclick="translateObject()"><span class="glyphicon glyphicon-eye-open"></span> ' +
-                            'Start translation</button>'
-                        $("#forgeViewer").html(msgButton);
-                    }
-                });
-            })
+            getModelDerivatives(urn);
         }
     });
 }
+
+function getModelDerivatives(urn) {
+    getForgeToken(function (access_token) {
+        jQuery.ajax({
+            url: 'https://developer.api.autodesk.com/modelderivative/v2/designdata/' + urn + '/manifest',
+            headers: { 'Authorization': 'Bearer ' + access_token },
+            success: function (res) {
+                if (res.status === 'success') launchViewer(urn);
+                else $("#forgeViewer").html('The translation job still running: ' + res.progress + '. Please try again in a moment.');
+            },
+            error: function (err) {
+                var msgButton = 'This file is not translated yet! ' +
+                    '<button class="btn btn-xs btn-info" onclick="translateObject()"><span class="glyphicon glyphicon-eye-open"></span> ' +
+                    'Start translation</button>'
+                $("#forgeViewer").html(msgButton);
+            }
+        });
+    })
+}
+
 
 function autodeskCustomMenu(autodeskNode) {
     var items;
